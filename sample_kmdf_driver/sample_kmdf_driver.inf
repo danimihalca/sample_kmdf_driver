@@ -1,0 +1,77 @@
+;
+; sample_kmdf_driver.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System ; TODO: specify appropriate Class
+ClassGuid={4d36e97d-e325-11ce-bfc1-08002be10318} ; TODO: specify appropriate ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=sample_kmdf_driver.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+PnpLockdown=1
+
+[DestinationDirs]
+DefaultDestDir = 12
+sample_kmdf_driver_Device_CoInstaller_CopyFiles = 11
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+sample_kmdf_driver.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%sample_kmdf_driver.DeviceDesc%=sample_kmdf_driver_Device, Root\sample_kmdf_driver ; TODO: edit hw-id
+
+[sample_kmdf_driver_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+sample_kmdf_driver.sys
+
+;-------------- Service installation
+[sample_kmdf_driver_Device.NT.Services]
+AddService = sample_kmdf_driver,%SPSVCINST_ASSOCSERVICE%, sample_kmdf_driver_Service_Inst
+
+; -------------- sample_kmdf_driver driver install sections
+[sample_kmdf_driver_Service_Inst]
+DisplayName    = %sample_kmdf_driver.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\sample_kmdf_driver.sys
+
+;
+;--- sample_kmdf_driver_Device Coinstaller installation ------
+;
+
+[sample_kmdf_driver_Device.NT.CoInstallers]
+AddReg=sample_kmdf_driver_Device_CoInstaller_AddReg
+CopyFiles=sample_kmdf_driver_Device_CoInstaller_CopyFiles
+
+[sample_kmdf_driver_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[sample_kmdf_driver_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[sample_kmdf_driver_Device.NT.Wdf]
+KmdfService =  sample_kmdf_driver, sample_kmdf_driver_wdfsect
+[sample_kmdf_driver_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+DiskName = "sample_kmdf_driver Installation Disk"
+sample_kmdf_driver.DeviceDesc = "sample_kmdf_driver Device"
+sample_kmdf_driver.SVCDESC = "sample_kmdf_driver Service"
